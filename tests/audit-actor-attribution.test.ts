@@ -351,10 +351,16 @@ describe("worker audit writes name their actor (#667/#676)", () => {
     }));
   }
 
-  /** The argument object text of every `audit(...)`/`auditTx(...)` call. */
+  /**
+   * The argument object text of every durable audit write in a file —
+   * `audit(...)`, `auditTx(...)`, `logAction(...)`, or `logActionTx(...)`.
+   * The canonical `logAction*` helpers (src/services/audit.ts, issue #660)
+   * persist the same rows as `audit`/`auditTx`, so the inventory counts them
+   * too: a file that switches helpers is still held to naming its actor.
+   */
   function auditCallArgs(source: string): string[] {
     const out: string[] = [];
-    const re = /\baudit(?:Tx)?\s*\(/g;
+    const re = /\b(?:audit|logAction)(?:Tx)?\s*\(/g;
     let match: RegExpExecArray | null;
     while ((match = re.exec(source)) !== null) {
       const open = source.indexOf("{", match.index + match[0].length);

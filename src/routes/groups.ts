@@ -9,7 +9,7 @@ import { requireMembership, requireAdmin } from "../services/access";
 import { groupMembership, requireGroupRole } from "../middleware";
 import { stellar } from "../services/stellar";
 import { inviteCode } from "../services/codes";
-import { auditGroupMemberActionTx, auditTx } from "../services/audit";
+import { auditGroupMemberActionTx, auditTx, logActionTx } from "../services/audit";
 import { rateLimited } from "../lib/rate-limit";
 import { AuditAction } from "../services/audit-actions";
 import {
@@ -119,12 +119,14 @@ export default async function groupRoutes(app: FastifyInstance) {
           members: { create: { userId: auth.id, role: "admin" } },
         },
       });
-      await auditTx(tx, {
-        userId: auth.id,
+      await logActionTx(tx, {
+        actorId: auth.id,
         groupId: created.id,
-        action: "group.create",
-        entityType: "group",
-        entityId: created.id,
+        actorType: "user",
+        action: AuditAction.GROUP_CREATE,
+        resourceType: "group",
+        resourceId: created.id,
+        outcome: "success",
         metadata: { name: body.name },
       });
       return created;
@@ -597,12 +599,14 @@ export default async function groupRoutes(app: FastifyInstance) {
           where: { id: invite.id },
           data: { uses: { increment: 1 } },
         });
-        await auditTx(tx, {
-          userId: auth.id,
+        await logActionTx(tx, {
+          actorId: auth.id,
           groupId: invite.groupId,
-          action: "group.join",
-          entityType: "group",
-          entityId: invite.groupId,
+          actorType: "user",
+          action: AuditAction.GROUP_JOIN,
+          resourceType: "group",
+          resourceId: invite.groupId,
+          outcome: "success",
           metadata: { inviteId: invite.id },
         });
       });

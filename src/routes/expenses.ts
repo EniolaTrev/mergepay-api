@@ -28,7 +28,8 @@ import {
   requireCursor,
   takeForPage,
 } from "../lib/pagination";
-import { auditTx } from "../services/audit";
+import { auditTx, logActionTx } from "../services/audit";
+import { AuditAction } from "../services/audit-actions";
 import { validateAsset, validateAmount } from "../services/assets";
 import { assertParticipantsCanHoldAsset } from "../services/horizon";
 import { createExpenseSchema, updateExpenseSchema } from "../validations/expense";
@@ -169,12 +170,12 @@ export default async function expenseRoutes(app: FastifyInstance) {
         include: expenseInclude,
       });
 
-      await auditTx(tx, {
-        userId: auth.id,
+      await logActionTx(tx, {
+        actorId: auth.id,
         groupId,
-        action: "expense.create",
-        entityType: "expense",
-        entityId: created.id,
+        action: AuditAction.EXPENSE_CREATE,
+        resourceType: "expense",
+        resourceId: created.id,
         metadata: { amount: body.amount, assetCode: body.assetCode },
       });
 

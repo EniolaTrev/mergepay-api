@@ -35,7 +35,7 @@ import { requireGroupRole } from "../plugins/group-access";
 import { stellar, memoText } from "../services/stellar";
 import { validateSettlementXdr } from "../services/settlement-xdr";
 import { shortCode } from "../services/codes";
-import { audit, auditTx } from "../services/audit";
+import { audit, auditTx, logActionTx } from "../services/audit";
 import { rateLimited } from "../lib/rate-limit";
 import {
   readIdempotencyKey,
@@ -298,12 +298,12 @@ export default async function settlementRoutes(app: FastifyInstance) {
           data: { status: "settling" },
         });
 
-        await auditTx(tx, {
-          userId: auth.id,
+        await logActionTx(tx, {
+          actorId: auth.id,
           groupId: expense.groupId,
           action: "settlement.create",
-          entityType: "settlement",
-          entityId: settlement.id,
+          resourceType: "settlement",
+          resourceId: settlement.id,
           metadata: {
             from: auth.id,
             to: expense.payerUserId,
